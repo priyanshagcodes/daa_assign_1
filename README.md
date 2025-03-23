@@ -262,5 +262,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
    - Size 65: 49 cliques
    - Size 66: 22 cliques
    - Size 67: 4 cliques
+ 
+  ![Histogram](public/skitter.jpeg)
      
 ![Histogram](public/skitter.png)
