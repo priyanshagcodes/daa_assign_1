@@ -72,7 +72,7 @@ https://daa-assign-grp20.netlify.app/
      - Change the dataset file name to one of: `as-skitter.txt`, `Email-Enron.txt`, or `wiki-Vote.txt` as needed.
      
    - **Chiba Algorithm (`chiba.cpp`):**
-     - Open `chiba.cpp` and go to **line 146**.
+     - Open `chiba.cpp` and go to **line 181**.
      - Change the dataset file name to one of: `as-skitter.txt`, `Email-Enron.txt`, or `wiki-Vote.txt` as needed.
 
 2. **Compile the Source Files with g++:**
