@@ -6,9 +6,9 @@ using namespace std::chrono;
 
 class Graph {
 public:
-    int n;                       // Number of vertices
-    vector<vector<bool>> adj;    // Adjacency matrix (compressed)
-    vector<int> order;           // Vertices ordered by non-increasing degree
+    int n;                      
+    vector<vector<bool>> adj;    
+    vector<int> order;           
     atomic<int> totalMaximalCliques{0};
     map<int, int> cliqueSizeDistribution;
     
@@ -22,7 +22,6 @@ public:
         adj[v][u] = true;
     }
     
-    // Order vertices by non-increasing degree
     void orderVertices() {
         vector<int> deg(n);
         for(int i = 0; i < n; i++) {
@@ -31,52 +30,50 @@ public:
         order.resize(n);
         iota(order.begin(), order.end(), 0);
         sort(order.begin(), order.end(), [&](int a, int b) {
-            return deg[a] > deg[b]; // Non-increasing order
+            return deg[a] > deg[b]; 
         });
     }
     
-    // Iterative clique enumeration
+    
     void CLIQUE(const string &outputFileName);
 };
 
 void Graph::CLIQUE(const string &outputFileName) {
-    orderVertices(); // Order vertices by non-decreasing degree.
+    orderVertices(); 
     
-    // Precompute positions of vertices in the order array.
+    
     vector<int> pos(n, 0);
     for (int j = 0; j < n; j++) {
         pos[order[j]] = j;
     }
     
-    // Open output file
+   
     ofstream outFile(outputFileName);
     if(!outFile) {
         cerr << "Error: Could not open output file " << outputFileName << endl;
         return;
     }
     
-    // Stack for iterative DFS
+    
     struct State {
-        int i;                  // Current vertex index in order
-        vector<int> C;          // Current clique
-        vector<int> P;          // Candidate set
+        int i;                  
+        vector<int> C;          
+        vector<int> P;          
     };
     stack<State> stack;
     
-    // Initial state
     State initialState;
     initialState.i = 0;
     initialState.P.resize(n);
     iota(initialState.P.begin(), initialState.P.end(), 0);
     stack.push(initialState);
     
-    // Iterative DFS
+    
     while (!stack.empty()) {
         State state = stack.top();
         stack.pop();
         
         if (state.i == n) {
-            // Check if C is maximal
             bool isMaximal = true;
             for (int v : state.P) {
                 bool extendable = true;
@@ -97,7 +94,7 @@ void Graph::CLIQUE(const string &outputFileName) {
                 if (totalMaximalCliques % 1000 == 0) {
                     cout << "[DEBUG] " << totalMaximalCliques << " maximal cliques found." << endl;
                 }
-                // Write clique to file
+              
                 outFile << "{ ";
                 for (int v : state.C) outFile << v << " ";
                 outFile << "}\n";
@@ -107,12 +104,12 @@ void Graph::CLIQUE(const string &outputFileName) {
         
         int current = order[state.i];
         
-        // Branch 1: Do not include current
+       
         State newState1 = state;
         newState1.i++;
         stack.push(newState1);
         
-        // Branch 2: Include current if it forms a clique with C
+       
         bool canInclude = true;
         for (int u : state.C) {
             if (!adj[u][current]) {
@@ -134,7 +131,7 @@ void Graph::CLIQUE(const string &outputFileName) {
         }
     }
     
-    // Write statistics to file
+  
     outFile << "\nClique Size Distribution (Histogram):\n";
     for (const auto &entry : cliqueSizeDistribution) {
         outFile << "Size " << entry.first << ": " << entry.second << " cliques\n";
@@ -143,9 +140,7 @@ void Graph::CLIQUE(const string &outputFileName) {
     outFile.close();
 }
 
-//////////////////////
-// Main function
-//////////////////////
+
 int main() {
     try {
         const string inputFileName = "/content/Email-Enron.txt";
@@ -163,9 +158,9 @@ int main() {
             return 1;
         }
         
-        // Build graph using given number of vertices.
+       
         Graph g(numVertices);
-        // Map original vertex IDs to 0-based indices.
+        
         unordered_map<int,int> vertexMap;
         int nextIndex = 0;
         vector<pair<int,int>> edges;
@@ -180,7 +175,7 @@ int main() {
         }
         in.close();
         
-        // Add edges to the graph.
+       
         for(const auto &edge : edges) {
             g.addEdge(edge.first, edge.second);
         }
