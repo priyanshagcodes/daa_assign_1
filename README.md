@@ -1,11 +1,11 @@
 # DAA Assignment - 1
 
 ## Group Members
-- Priyansh Agarwal
+- Priyansh Agarwal(2022A7PS1293H)
 - Harsh Jawajiwar (2021B5A72358H)
-- Ansh Kalucha
-- Sarthak Somani
-- Ujjwal Mishra
+- Ansh Kalucha(2022A7PS1799H)
+- Sarthak Somani(2021B1A70793H)
+- Ujjwal Mishra(2021B72479H)
 
 ---
 
