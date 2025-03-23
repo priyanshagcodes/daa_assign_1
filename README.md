@@ -146,6 +146,12 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 ## Results and Discussion
 
 ### wiki-Vote
+- Total number of maximal cliques: 459002
+- Largest Clique size: 17
+- Time taken by :
+-   Chiba:
+-   ELS:
+-   Wrost-Case: 
 - **Clique Size Distribution**:
   - Size 2: 8655 cliques
   - Size 3: 13718 cliques
@@ -169,7 +175,12 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 ---
 
 ### Email-Enron
-- **Number of maximal cliques**: 226859
+- Total number of maximal cliques: 226859
+- Largest Clique size: 20
+- Time taken by :
+-   Chiba:
+-   ELS:
+-   Wrost-Case:
 - **Clique Size Distribution**:
   - Size 2: 14070 cliques
   - Size 3: 7077 cliques
@@ -195,6 +206,12 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 
 ---
 ### as-Skitter
+- Total number of maximal cliques: 37322355
+- Largest Clique size: 67
+- - Time taken by :
+-   Chiba:
+-   ELS:
+-   Wrost-Case:
 - **Clique Size Distribution**:
    - Size 2: 2319807 cliques
    - Size 3: 3171609 cliques
