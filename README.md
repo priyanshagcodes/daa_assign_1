@@ -42,14 +42,14 @@ Three graph algorithms' C/C++ implementations are included in this repository, a
      
    - **Set Header Format:**  
      
-     For example, for `WIKI.TXT`, the file should begin with a line similar to:
+     For example, for `wiki-Vote.TXT`, the file should begin with a line similar to:
      ```
-     7115    103689
+     6688    93689
      ```
      followed by the list of edges:
      ```
-     30    1412
-     31    352
+     320    1412
+     153    242
      ...
      ```
     The actual node and edge values are provided in the original TXT file.
