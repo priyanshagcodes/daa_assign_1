@@ -1,4 +1,4 @@
-%%writefile graph_cliques.cpp
+
 
 #include <iostream>
 #include <vector>
