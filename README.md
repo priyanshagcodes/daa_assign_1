@@ -178,9 +178,9 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 - Total number of maximal cliques: 226859
 - Largest Clique size: 20
 - Time taken by :
---   Chiba:
---   ELS:
---   Wrost-Case:
+  -   Chiba:
+  -   ELS:
+  -   Wrost-Case:
 - **Clique Size Distribution**:
   - Size 2: 14070 cliques
   - Size 3: 7077 cliques
