@@ -164,7 +164,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
   - Size 16: 208 cliques
   - Size 17: 23 cliques
 
-![Histogram](/daa_assign_1/public/clique_histogram.png)
+![Histogram](public/clique_histogram.png)
 
 ---
 
@@ -192,7 +192,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
   - Size 19: 10 cliques
   - Size 20: 6 cliques
 
-![Histogram](/daa_assign_1/public/els_email_histogram.png)
+![Histogram](public/els_email_histogram.png)
 
 ---
 
@@ -221,7 +221,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 - **Total Number of Maximal Cliques**: 226859
 - **Time taken**: 512711 ms
 
-![Histogram](/daa_assign_1/public/Chiba_email_histogram.png)
+![Histogram](public/Chiba_email_histogram.png)
 
 ---
 
@@ -247,7 +247,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 - **Total Number of Maximal Cliques**: 459002
 - **Time taken**: 156874 ms
 
-![Histogram](/daa_assign_1/public/Chiba_wiki_histogram.png)
+![Histogram](public/Chiba_wiki_histogram.png)
 
 ---
 
@@ -275,7 +275,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
   - Size 19: 10 cliques
   - Size 20: 6 cliques
 
-![Histogram](/daa_assign_1/public/Worst_case_email_histogram.png)
+![Histogram](public/Worst_case_email_histogram.png)
 
 ---
 
@@ -300,4 +300,4 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
   - Size 16: 208 cliques
   - Size 17: 23 cliques
 
-![Histogram](/daa_assign_1/public/Worst_case_wiki_histogram.png)
+![Histogram](public/Worst_case_wiki_histogram.png)
