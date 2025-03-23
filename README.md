@@ -97,13 +97,13 @@ Three graph algorithms' C/C++ implementations are included in this repository, a
 
 ## Individual Contributions
 
-- **Simran Rao and Simran Singh:**  
+- **Priyansh Agarwal & Ansh Kalucha**  
   - Developed the worst-case time complexity for generating all maximal cliques and computational experiments by Etsuji Tomitaa, Akira Tanakaa and Haruhisa Takahashi
 
-- **Shreya Kunjankumar Mehta**  
+- **Sarthak Somani**  
   - Developed the Arboricity and Subgraph Listing Algorithms by Norishige Chiba and Takao Nishizekvf
 
-- **Sukhbodhanand Tripathi & Granth Bagadia:**  
+- **Ujjwal Mishra & Harsh Jawajiwar**  
   - Developed the Listing All Maximal Cliques in Sparse Graphs in Near-optimal Time Algorithm by David Eppstein, Maarten Loffler, and Darren Strash
   - Created the project webpage.
 ## 1. Chiba Implementation
