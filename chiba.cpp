@@ -8,23 +8,24 @@
 #include <string>
 #include <numeric>
 #include <omp.h>
+#include <stack>
 
 using namespace std;
 using namespace std::chrono;
 
 class Graph {
 public:
-    int V;                       
+    int V;                       /
     vector<vector<bool>> adj;    
     vector<int> degree;          
-    vector<int> order;          
+    vector<int> order;           
 
     Graph(int V) : V(V) {
         adj.resize(V, vector<bool>(V, false));
         degree.resize(V, 0);
     }
 
-  
+    // Add an undirected edge.
     void addEdge(int u, int v) {
         if (u >= 0 && u < V && v >= 0 && v < V) {
             adj[u][v] = true;
@@ -34,7 +35,7 @@ public:
         }
     }
 
-
+    
     void orderVertices() {
         order.resize(V);
         iota(order.begin(), order.end(), 0);
@@ -43,18 +44,16 @@ public:
         });
     }
 
+    
     void CLIQUE(const string &outputFileName, int &maximalCliqueCount);
 
 private:
-
-    void UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<string> &outputBuffer, 
-                map<int,int> &cliqueHistogram, int &maximalCliqueCount, const vector<int> &pos);
-  
+    
     bool isMaximal(const unordered_set<int> &C);
 };
 
 bool Graph::isMaximal(const unordered_set<int> &C) {
-  
+    
     for (int v = 0; v < V; v++) {
         if (C.find(v) == C.end()) {
             bool adjacentToAll = true;
@@ -71,101 +70,102 @@ bool Graph::isMaximal(const unordered_set<int> &C) {
     return true;
 }
 
-void Graph::UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<string> &outputBuffer, 
-                   map<int,int> &cliqueHistogram, int &maximalCliqueCount, const vector<int> &pos) {
-  
-    if(i == V+1) {
-        if(!C.empty() && isMaximal(C)) {
-            int size = C.size();
-            cliqueHistogram[size]++;
-            #pragma omp atomic
-            maximalCliqueCount++;
-            #pragma omp critical
-            {
-                string cliqueStr = "{ ";
-                for (int v : C) cliqueStr += to_string(v) + " ";
-                cliqueStr += "}";
-                outputBuffer.push_back(cliqueStr);
-            }
-            if(maximalCliqueCount % 1000 == 0) {
-                #pragma omp critical
-                cout << "[DEBUG] " << maximalCliqueCount << " maximal cliques found." << endl;
-            }
-        }
-        return;
-    }
-    
-    int current = order[i-1];
-    
-    unordered_set<int> P1 = P;
-    P1.erase(current);
-    UPDATE(i+1, C, P1, outputBuffer, cliqueHistogram, maximalCliqueCount, pos);
-    
-   
-    bool canInclude = true;
-    for (int u : C) {
-        if (!adj[u][current]) {
-            canInclude = false;
-            break;
-        }
-    }
-    if(canInclude) {
-        unordered_set<int> C_new = C;
-        C_new.insert(current);
-   
-        unordered_set<int> P_new;
-        for (int v : P) {
-            if (adj[current][v])
-                P_new.insert(v);
-        }
-        
-        if(C.size() < 3) {
-            #pragma omp task shared(maximalCliqueCount, cliqueHistogram, outputBuffer)
-            {
-                UPDATE(i+1, C_new, P_new, outputBuffer, cliqueHistogram, maximalCliqueCount, pos);
-            }
-            #pragma omp taskwait
-        } else {
-            UPDATE(i+1, C_new, P_new, outputBuffer, cliqueHistogram, maximalCliqueCount, pos);
-        }
-    }
-}
-
 void Graph::CLIQUE(const string &outputFileName, int &maximalCliqueCount) {
     orderVertices();
     
+   
     vector<int> pos(V, 0);
     for (int j = 0; j < V; j++) {
         pos[order[j]] = j;
     }
     
-   
-    unordered_set<int> C;
+    
+    ofstream outFile(outputFileName);
+    if (!outFile) {
+        cerr << "Error: Could not open output file " << outputFileName << endl;
+        return;
+    }
+    outFile << "Maximal Cliques:\n";
+    
+    
+    struct StackFrame {
+        int i;                     
+        unordered_set<int> C;      
+        unordered_set<int> P;      
+    };
+    stack<StackFrame> stack;
+    
+    
     unordered_set<int> P;
     for (int i = 0; i < V; i++) {
         P.insert(i);
     }
     
-    map<int,int> cliqueHistogram;
-    vector<string> outputBuffer;
     
-    #pragma omp parallel
-    {
-        #pragma omp single nowait
-        {
-            UPDATE(1, C, P, outputBuffer, cliqueHistogram, maximalCliqueCount, pos);
+    stack.push({1, {}, P});
+    
+    map<int, int> cliqueHistogram;
+    maximalCliqueCount = 0;
+    
+   
+    while (!stack.empty()) {
+        StackFrame frame = stack.top();
+        stack.pop();
+        
+        int i = frame.i;
+        unordered_set<int> C = frame.C;
+        unordered_set<int> P = frame.P;
+        
+        
+        if (i == V + 1) {
+            if (!C.empty() && isMaximal(C)) {
+                int size = C.size();
+                cliqueHistogram[size]++;
+                #pragma omp atomic
+                maximalCliqueCount++;
+                #pragma omp critical
+                {
+                    outFile << "{ ";
+                    for (int v : C) outFile << v << " ";
+                    outFile << "}\n";
+                }
+                if (maximalCliqueCount % 1000 == 0) {
+                    #pragma omp critical
+                    cout << "[DEBUG] " << maximalCliqueCount << " maximal cliques found." << endl;
+                }
+            }
+            continue;
+        }
+        
+        
+        int current = order[i - 1];
+        
+       
+        unordered_set<int> P1 = P;
+        P1.erase(current);
+        stack.push({i + 1, C, P1});
+        
+
+        bool canInclude = true;
+        for (int u : C) {
+            if (!adj[u][current]) {
+                canInclude = false;
+                break;
+            }
+        }
+        if (canInclude) {
+            unordered_set<int> C_new = C;
+            C_new.insert(current);
+          
+            unordered_set<int> P_new;
+            for (int v : P) {
+                if (adj[current][v])
+                    P_new.insert(v);
+            }
+            stack.push({i + 1, C_new, P_new});
         }
     }
     
-    // Write results to file.
-    ofstream outFile(outputFileName);
-    if(!outFile) {
-        cerr << "Error: Could not open output file " << outputFileName << endl;
-        return;
-    }
-    outFile << "Maximal Cliques:\n";
-    for (const auto &line : outputBuffer)
-        outFile << line << "\n";
     
     outFile << "\nClique Size Distribution (Histogram):\n";
     for (const auto &entry : cliqueHistogram)
@@ -178,7 +178,7 @@ void Graph::CLIQUE(const string &outputFileName, int &maximalCliqueCount) {
 
 int main() {
     try {
-        const string inputFileName = "/content/wiki-Vote.txt";
+        const string inputFileName = "/content/Email-Enron.txt";
         ifstream inFile(inputFileName);
         if (!inFile) {
             cerr << "Error: Could not open file " << inputFileName << endl;
@@ -188,7 +188,7 @@ int main() {
         
         int n, m, u, v;
         inFile >> n >> m;
-        if(n <= 0 || m <= 0) {
+        if (n <= 0 || m <= 0) {
             cerr << "Error: Invalid graph size in file." << endl;
             return 1;
         }
@@ -196,11 +196,11 @@ int main() {
         Graph g(n);
         map<int, int> vertexMap;
         int nextIndex = 0;
-        vector<pair<int,int>> edges;
-        while(inFile >> u >> v) {
-            if(vertexMap.find(u) == vertexMap.end())
+        vector<pair<int, int>> edges;
+        while (inFile >> u >> v) {
+            if (vertexMap.find(u) == vertexMap.end())
                 vertexMap[u] = nextIndex++;
-            if(vertexMap.find(v) == vertexMap.end())
+            if (vertexMap.find(v) == vertexMap.end())
                 vertexMap[v] = nextIndex++;
             edges.push_back({vertexMap[u], vertexMap[v]});
         }
