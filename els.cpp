@@ -1,205 +1,169 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <unordered_set>
+#include <algorithm>
+#include <chrono>
+#include <map>
+#include <unordered_map>
+
 using namespace std;
 using namespace std::chrono;
 
 class Graph {
+private:
+    int n, m;
+    vector<vector<int>> adj;
+    int degeneracy;
+    vector<int> degeneracy_ordering;
+    int total_cliques;
+    map<int, int> clique_sizes;
+
 public:
-    int n;                       
-    vector<vector<int>> adj;     
-    vector<int> order;           
-    int totalMaximalCliques = 0;
-    map<int, int> cliqueSizeDistribution;
-    
-    Graph(int n) : n(n) {
-        adj.resize(n);
-    }
-    
-    
+    Graph(int n, int m) : n(n), m(m), adj(n), total_cliques(0), degeneracy(0) {}
+
     void addEdge(int u, int v) {
-        if(u == v) return;
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
-    
-    
-    void orderVertices() {
-        vector<int> deg(n);
-        for(int i = 0; i < n; i++){
-            deg[i] = adj[i].size();
+
+    void computeDegeneracyOrdering() {
+        vector<int> degree(n, 0);
+        vector<vector<int>> bin(n);
+        vector<bool> removed(n, false);
+        degeneracy_ordering.clear();
+
+        for (int i = 0; i < n; i++) {
+            degree[i] = adj[i].size();
+            bin[degree[i]].push_back(i);
         }
-        order.resize(n);
-        iota(order.begin(), order.end(), 0);
-        sort(order.begin(), order.end(), [&](int a, int b) {
-            return deg[a] > deg[b];
-        });
-    }
-    
-    
-    void UPDATE(int i, vector<int>& C, set<int>& P, vector<string>& outputBuffer, 
-                map<int,int>& cliqueHistogram, int &maximalCliqueCount);
-    
-  
-    bool isMaximal(const vector<int>& C);
-    
 
-    void CLIQUE(const string &outputFileName, int &maximalCliqueCount);
-};
+        for (int i = 0, v = 0; i < n; i++) {
+            int j = 0;
+            while (j < n && bin[j].empty()) j++;
+            if (j == n) break;
+            v = bin[j].back();
+            bin[j].pop_back();
+            removed[v] = true;
+            degeneracy_ordering.push_back(v);
 
-bool Graph::isMaximal(const vector<int>& C) {
-
-    for (int v = 0; v < n; v++) {
-        if (find(C.begin(), C.end(), v) == C.end()) {
-            bool extendable = true;
-            for (int u : C) {
-                if (find(adj[u].begin(), adj[u].end(), v) == adj[u].end()){
-                    extendable = false;
-                    break;
+            for (int neighbor : adj[v]) {
+                if (!removed[neighbor]) {
+                    bin[degree[neighbor]].erase(
+                        find(bin[degree[neighbor]].begin(), bin[degree[neighbor]].end(), neighbor)
+                    );
+                    degree[neighbor]--;
+                    bin[degree[neighbor]].push_back(neighbor);
                 }
             }
-            if (extendable)
-                return false;
+            degeneracy = max(degeneracy, j);
         }
+        reverse(degeneracy_ordering.begin(), degeneracy_ordering.end());
     }
-    return true;
-}
 
-void Graph::UPDATE(int i, vector<int>& C, set<int>& P, vector<string>& outputBuffer, 
-                   map<int,int>& cliqueHistogram, int &maximalCliqueCount) {
-   
-    if(i == n + 1) {
-        if(!C.empty() && isMaximal(C)) {
-            cliqueHistogram[C.size()]++;
-            maximalCliqueCount++;
-            if(maximalCliqueCount % 1000 == 0)
-                cout << "[DEBUG] " << maximalCliqueCount << " maximal cliques found." << endl;
-     
-            string cliqueStr = "{ ";
-            for (int v : C)
-                cliqueStr += to_string(v) + " ";
-            cliqueStr += "}";
-            outputBuffer.push_back(cliqueStr);
+    void bronKerboschPivot(unordered_set<int> R, unordered_set<int> P, unordered_set<int> X) {
+        if (P.empty() && X.empty()) {
+            total_cliques++;
+            clique_sizes[R.size()]++;
+            if (total_cliques % 10000 == 0) {
+                cout << "[Milestone] Found " << total_cliques << " cliques so far. Latest size: " << R.size() << endl;
+            }
+            return;
         }
-        return;
-    }
-    
-    int current = order[i-1];
-    
-    set<int> P1 = P;
-    P1.erase(current);
-    UPDATE(i + 1, C, P1, outputBuffer, cliqueHistogram, maximalCliqueCount);
-    
-    bool canInclude = true;
-    for (int u : C) {
-        if (find(adj[u].begin(), adj[u].end(), current) == adj[u].end()) {
-            canInclude = false;
-            break;
-        }
-    }
-    if(canInclude) {
-        vector<int> C_new = C;
-        C_new.push_back(current);
-    
-        vector<int> pos(n, 0);
-        for (int j = 0; j < n; j++) {
-            pos[order[j]] = j;
-        }
- 
-        set<int> P_new;
-        for (int x : P) {
-            if (pos[x] > pos[current]) { 
-                if (find(adj[current].begin(), adj[current].end(), x) != adj[current].end())
-                    P_new.insert(x);
+
+        int pivot = -1, max_connections = -1;
+        for (int v : P) {
+            int connections = count_if(P.begin(), P.end(), [&](int u) { return find(adj[v].begin(), adj[v].end(), u) != adj[v].end(); });
+            if (connections > max_connections) {
+                max_connections = connections;
+                pivot = v;
             }
         }
-        UPDATE(i + 1, C_new, P_new, outputBuffer, cliqueHistogram, maximalCliqueCount);
-    }
-}
 
-void Graph::CLIQUE(const string &outputFileName, int &maximalCliqueCount) {
-    orderVertices(); 
-   
-    set<int> P;
-    for (int i = 0; i < n; i++) {
-        P.insert(i);
-    }
-    
-    vector<int> C; 
-    map<int,int> cliqueHistogram;
-    vector<string> outputBuffer;
-    
-    UPDATE(1, C, P, outputBuffer, cliqueHistogram, maximalCliqueCount);
-
-    ofstream outFile(outputFileName);
-    if(!outFile) {
-        cerr << "Error: Could not open output file " << outputFileName << endl;
-        return;
-    }
-    outFile << "Maximal Cliques:\n";
-    for (const auto &line : outputBuffer)
-        outFile << line << "\n";
-    
-    outFile << "\nClique Size Distribution (Histogram):\n";
-    for (const auto &entry : cliqueHistogram)
-        outFile << "Size " << entry.first << ": " << entry.second << " cliques\n";
-    
-    outFile << "\nTotal Number of Maximal Cliques: " << maximalCliqueCount << "\n";
-    outFile.close();
-}
-
-int main() {
-    try {
-        const string inputFileName = "/content/wiki-Vote.txt";
-        const string outputFileName = "/content/clique_output.txt";
-        ifstream in(inputFileName);
-        if (!in) {
-            cerr << "Error: Could not open input file " << inputFileName << endl;
-            return 1;
+        unordered_set<int> P_minus_neighbors;
+        for (int v : P) {
+            if (pivot == -1 || find(adj[pivot].begin(), adj[pivot].end(), v) == adj[pivot].end()) {
+                P_minus_neighbors.insert(v);
+            }
         }
-        
-        int numVertices, numEdges, u, v;
-        in >> numVertices >> numEdges;
-        if(numVertices <= 0 || numEdges <= 0) {
-            cerr << "Error: Invalid graph size in file." << endl;
-            return 1;
-        }
-        
 
-        Graph g(numVertices);
+        for (int v : P_minus_neighbors) {
+            unordered_set<int> new_R = R;
+            new_R.insert(v);
+            unordered_set<int> new_P, new_X;
+            for (int w : P) {
+                if (find(adj[v].begin(), adj[v].end(), w) != adj[v].end()) {
+                    new_P.insert(w);
+                }
+            }
+            for (int w : X) {
+                if (find(adj[v].begin(), adj[v].end(), w) != adj[v].end()) {
+                    new_X.insert(w);
+                }
+            }
+            bronKerboschPivot(new_R, new_P, new_X);
+            P.erase(v);
+            X.insert(v);
+        }
+    }
+
+    void findAllMaximalCliques() {
+        if (degeneracy_ordering.empty()) {
+            computeDegeneracyOrdering();
+        }
+        for (int i = 0; i < n; i++) {
+            int v = degeneracy_ordering[i];
+            unordered_set<int> P, X;
+            for (int neighbor : adj[v]) {
+                if (find(degeneracy_ordering.begin() + i + 1, degeneracy_ordering.end(), neighbor) != degeneracy_ordering.end()) {
+                    P.insert(neighbor);
+                }
+                if (find(degeneracy_ordering.begin(), degeneracy_ordering.begin() + i, neighbor) != degeneracy_ordering.begin() + i) {
+                    X.insert(neighbor);
+                }
+            }
+            unordered_set<int> R = {v};
+            bronKerboschPivot(R, P, X);
+        }
+    }
+
+    void processAndFindCliques(const string& inputFile, const string& outputFile) {
+        auto start_time = high_resolution_clock::now();
+        ifstream fin(inputFile);
+        fin >> n >> m;
+        adj.resize(n);
 
         unordered_map<int, int> vertexMap;
         int nextIndex = 0;
-        vector<pair<int, int>> edges;
-        while(in >> u >> v) {
-            if(vertexMap.find(u) == vertexMap.end())
-                vertexMap[u] = nextIndex++;
-            if(vertexMap.find(v) == vertexMap.end())
-                vertexMap[v] = nextIndex++;
-            edges.push_back({vertexMap[u], vertexMap[v]});
+        for (int i = 0; i < m; i++) {
+            int u, v;
+            fin >> u >> v;
+            if (vertexMap.find(u) == vertexMap.end()) vertexMap[u] = nextIndex++;
+            if (vertexMap.find(v) == vertexMap.end()) vertexMap[v] = nextIndex++;
+            addEdge(vertexMap[u], vertexMap[v]);
         }
-        in.close();
-        
-        for (const auto &edge : edges) {
-            g.addEdge(edge.first, edge.second);
+        fin.close();
+        computeDegeneracyOrdering();
+        auto clique_start = high_resolution_clock::now();
+        findAllMaximalCliques();
+        auto clique_end = high_resolution_clock::now();
+        auto end_time = high_resolution_clock::now();
+        auto clique_duration = duration_cast<milliseconds>(clique_end - clique_start);
+        auto total_duration = duration_cast<milliseconds>(end_time - start_time);
+        ofstream fout(outputFile);
+        fout << "Number of maximal cliques: " << total_cliques << endl;
+        fout << "Time taken for clique finding: " << clique_duration.count() << " ms" << endl;
+        fout << "Total execution time: " << total_duration.count() << " ms" << endl;
+        fout << "Clique Size Distribution:" << endl;
+        for (const auto& pair : clique_sizes) {
+            fout << "Size " << pair.first << ": " << pair.second << " cliques" << endl;
         }
-        
-        cout << "Successfully processed " << edges.size() << " edges." << endl;
-        
-        auto start = high_resolution_clock::now();
-        int maximalCliqueCount = 0;
-        g.CLIQUE(outputFileName, maximalCliqueCount);
-        auto stop = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(stop - start);
-        
-        cout << "Results saved to " << outputFileName << "\n";
-        cout << "Total Number of Maximal Cliques: " << maximalCliqueCount << "\n";
-        cout << "Time taken: " << duration.count() << " ms" << "\n";
-    } catch(const exception &e) {
-        cerr << "Error: " << e.what() << "\n";
-        return 1;
-    } catch(...) {
-        cerr << "Unknown error occurred.\n";
-        return 1;
+        fout.close();
     }
-    
+};
+
+int main() {
+    Graph g(0, 0);
+    g.processAndFindCliques("/content/wiki-Vote.txt", "/content/Els-as-skitter.txt");
     return 0;
 }
