@@ -164,7 +164,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
   - Size 16: 208 cliques
   - Size 17: 23 cliques
 
-![Histogram](public/clique_histogram.png)
+![Histogram](public/wiki.png)
 
 ---
 
@@ -191,7 +191,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
   - Size 19: 10 cliques
   - Size 20: 6 cliques
 
-![Histogram](public/els_email_histogram.png)
+![Histogram](public/email.png)
 
 ---
 ### as-Skitter
@@ -263,3 +263,4 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
    - Size 66: 22 cliques
    - Size 67: 4 cliques
      
+![Histogram](public/skitter.png)
