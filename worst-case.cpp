@@ -144,16 +144,16 @@ int main() {
         return 1;
     }
 
-    // ✅ Writing to the file correctly
+    
     outputFile << "Number of maximal cliques: " << maximalCliqueCount << "\n";
     outputFile << "Execution Time: " << duration.count() << " ms\n";
     outputFile << "Clique Size Distribution:\n";
     for (const auto& entry : cliqueSizeDistribution) {
         outputFile << "Size " << entry.first << ": " << entry.second << " cliques\n";
     }
-    outputFile.close(); // ✅ Close the file after writing
+    outputFile.close();
 
-    // ✅ Print the results to the console
+  
     cout << "Execution Time: " << duration.count() << " ms" << endl;
     cout << "Number of maximal cliques: " << maximalCliqueCount << endl;
     cout << "Clique Size Distribution:" << endl;
