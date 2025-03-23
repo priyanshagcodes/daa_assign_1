@@ -16,17 +16,17 @@ using namespace std::chrono;
 
 class Graph {
 public:
-    int V;                       // Number of vertices
-    vector<vector<bool>> adj;    // Adjacency matrix (compressed)
-    vector<int> degree;          // Degree of each vertex
-    vector<int> order;           // Vertices ordered in non-decreasing order by degree
+    int V;                       
+    vector<vector<bool>> adj;    
+    vector<int> degree;          
+    vector<int> order;          
 
     Graph(int V) : V(V) {
         adj.resize(V, vector<bool>(V, false));
         degree.resize(V, 0);
     }
 
-    // Add an undirected edge.
+  
     void addEdge(int u, int v) {
         if (u >= 0 && u < V && v >= 0 && v < V) {
             adj[u][v] = true;
@@ -36,7 +36,7 @@ public:
         }
     }
 
-    // Order vertices by non-decreasing degree.
+
     void orderVertices() {
         order.resize(V);
         iota(order.begin(), order.end(), 0);
@@ -45,19 +45,18 @@ public:
         });
     }
 
-    // Top-level function that calls UPDATE and writes results.
     void CLIQUE(const string &outputFileName, int &maximalCliqueCount);
 
 private:
-    // Recursive procedure UPDATE(i, C, P) as in the paper.
+
     void UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<string> &outputBuffer, 
                 map<int,int> &cliqueHistogram, int &maximalCliqueCount, const vector<int> &pos);
-    // Maximality test: returns true if no vertex (outside C) can be added to C.
+  
     bool isMaximal(const unordered_set<int> &C);
 };
 
 bool Graph::isMaximal(const unordered_set<int> &C) {
-    // For every vertex not in C, if it is adjacent to every vertex in C, then C can be extended.
+  
     for (int v = 0; v < V; v++) {
         if (C.find(v) == C.end()) {
             bool adjacentToAll = true;
@@ -76,7 +75,7 @@ bool Graph::isMaximal(const unordered_set<int> &C) {
 
 void Graph::UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<string> &outputBuffer, 
                    map<int,int> &cliqueHistogram, int &maximalCliqueCount, const vector<int> &pos) {
-    // Base case: i == V+1 means all vertices (in the sorted order) have been processed.
+  
     if(i == V+1) {
         if(!C.empty() && isMaximal(C)) {
             int size = C.size();
@@ -98,15 +97,13 @@ void Graph::UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<s
         return;
     }
     
-    // Let current vertex be order[i-1].
     int current = order[i-1];
     
-    // Branch 1: Do not include current vertex.
     unordered_set<int> P1 = P;
     P1.erase(current);
     UPDATE(i+1, C, P1, outputBuffer, cliqueHistogram, maximalCliqueCount, pos);
     
-    // Branch 2: If current is adjacent to every vertex in C, try including it.
+   
     bool canInclude = true;
     for (int u : C) {
         if (!adj[u][current]) {
@@ -117,13 +114,13 @@ void Graph::UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<s
     if(canInclude) {
         unordered_set<int> C_new = C;
         C_new.insert(current);
-        // Compute new candidate set as P ∩ N(current)
+   
         unordered_set<int> P_new;
         for (int v : P) {
             if (adj[current][v])
                 P_new.insert(v);
         }
-        // Parallelize only top-level recursions.
+        
         if(C.size() < 3) {
             #pragma omp task shared(maximalCliqueCount, cliqueHistogram, outputBuffer)
             {
@@ -139,14 +136,13 @@ void Graph::UPDATE(int i, unordered_set<int> &C, unordered_set<int> &P, vector<s
 void Graph::CLIQUE(const string &outputFileName, int &maximalCliqueCount) {
     orderVertices();
     
-    // Precompute positions of vertices in the order array.
     vector<int> pos(V, 0);
     for (int j = 0; j < V; j++) {
         pos[order[j]] = j;
     }
     
-    // Initial candidate set P: all vertices.
-    unordered_set<int> C; // Current clique, initially empty.
+   
+    unordered_set<int> C;
     unordered_set<int> P;
     for (int i = 0; i < V; i++) {
         P.insert(i);
@@ -181,9 +177,7 @@ void Graph::CLIQUE(const string &outputFileName, int &maximalCliqueCount) {
     outFile.close();
 }
 
-//////////////////////
-// Main Function
-//////////////////////
+
 int main() {
     try {
         const string inputFileName = "/content/wiki-Vote.txt";
