@@ -84,8 +84,8 @@ Three graph algorithms' C/C++ implementations are included in this repository, a
    - Compile `worst-case.cpp`:
      ```bash
      g++ -O3 -o worst-case worst-case.cpp
-     tomita.exe (Windows)
-     ./tomita.exe (Unix)
+     worst-case.exe (Windows)
+     ./worst-case.exe (Unix)
      ```
    - Compile `chiba.cpp`:
      ```bash
