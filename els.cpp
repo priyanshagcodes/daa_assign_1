@@ -1,275 +1,148 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
-#include <unordered_set>
-#include <algorithm>
-#include <chrono>
+#include <set>
 #include <map>
-
+#include <fstream>
+#include <chrono>
 
 using namespace std;
 using namespace std::chrono;
 
-
 class Graph {
-private:
-    int n; // number of vertices
-    int m; // number of edges
-    vector<vector<int>> adj; // adjacency list
-    int degeneracy; // degeneracy of the graph
-    vector<int> degeneracy_ordering; // vertices ordered by degeneracy
-    int total_cliques; // total number of maximal cliques found
-    map<int, int> clique_sizes; // distribution of clique sizes
-   
 public:
-    Graph(int n, int m) : n(n), m(m), adj(n), total_cliques(0), degeneracy(0) {}
-   
+    int n;
+    vector<set<int>> adj;
+
+    Graph(int n) : n(n), adj(n) {}
+
     void addEdge(int u, int v) {
-        adj[u].push_back(v);
-        adj[v].push_back(u);
+        if (u >= 0 && u < n && v >= 0 && v < n) {
+            adj[u].insert(v);
+            adj[v].insert(u);
+        } else {
+            cerr << "Warning: Edge (" << u << "," << v << ") out of bounds. Skipping.\n";
+        }
     }
-   
-    void computeDegeneracyOrdering() {
-        vector<int> degree(n, 0);
-        vector<vector<int>> bin(n, vector<int>());
-        vector<bool> removed(n, false);
-        degeneracy_ordering.clear();
-       
-        
-        for (int i = 0; i < n; i++) {
-            degree[i] = adj[i].size();
-            bin[degree[i]].push_back(i);
-        }
-       
-        
-        for (int i = 0, v = 0; i < n; i++) {
-            
-            int j = 0;
-            while (j < n && bin[j].empty()) j++;
-           
-            if (j == n) break;
-           
-            v = bin[j].back();
-            bin[j].pop_back();
-            removed[v] = true;
-            degeneracy_ordering.push_back(v);
-           
-            
-            for (int neighbor : adj[v]) {
-                if (!removed[neighbor]) {
-                    bin[degree[neighbor]].erase(
-                        find(bin[degree[neighbor]].begin(), bin[degree[neighbor]].end(), neighbor)
-                    );
-                    degree[neighbor]--;
-                    bin[degree[neighbor]].push_back(neighbor);
-                }
-            }
-           
-            
-            degeneracy = max(degeneracy, j);
-        }
-       
-        
-        reverse(degeneracy_ordering.begin(), degeneracy_ordering.end());
-    }
-   
-  
-    bool isConnectedToAll(int v, const unordered_set<int>& vertexSet) {
-        for (int u : vertexSet) {
-            if (find(adj[v].begin(), adj[v].end(), u) == adj[v].end()) {
-                return false;
-            }
-        }
-        return true;
-    }
-   
-   
-    unordered_set<int> findCommonNeighbors(int v, const unordered_set<int>& vertexSet) {
-        unordered_set<int> result;
-       
-        for (int neighbor : adj[v]) {
-            if (isConnectedToAll(neighbor, vertexSet)) {
-                result.insert(neighbor);
-            }
-        }
-       
-        return result;
-    }
-   
-   
-    int findPivot(const unordered_set<int>& candidates, const unordered_set<int>& excluded) {
-        int max_connections = -1;
-        int pivot = -1;
-       
-    
-        for (int v : candidates) {
-            int connections = 0;
-            for (int u : candidates) {
-                if (v != u && find(adj[v].begin(), adj[v].end(), u) != adj[v].end()) {
-                    connections++;
-                }
-            }
-           
-            if (connections > max_connections) {
-                max_connections = connections;
-                pivot = v;
-            }
-        }
-       
-       
-        for (int v : excluded) {
-            int connections = 0;
-            for (int u : candidates) {
-                if (find(adj[v].begin(), adj[v].end(), u) != adj[v].end()) {
-                    connections++;
-                }
-            }
-           
-            if (connections > max_connections) {
-                max_connections = connections;
-                pivot = v;
-            }
-        }
-       
-        return pivot;
-    }
-   
-    
-    void bronKerboschPivot(unordered_set<int> R, unordered_set<int> P, unordered_set<int> X) {
+
+    void tomita(vector<int>& R, set<int>& P, set<int>& X, ofstream& outputFile, map<int, int>& clique_size_distribution, int& clique_count) {
         if (P.empty() && X.empty()) {
-            
-            total_cliques++;
-            clique_sizes[R.size()]++;
-            if (total_cliques % 10000 == 0) {
-                cout << "[Milestone] Found " << total_cliques << " cliques so far. Latest size: " << R.size() << endl;
-            }
+            clique_count++;
+            clique_size_distribution[R.size()]++;
+
+            // Write clique to file directly
+            outputFile << "{ ";
+            for (int v : R) outputFile << v << " ";
+            outputFile << "}\n";
+
             return;
         }
-       
-    
-        int u = findPivot(P, X);
-       
-       
-        unordered_set<int> P_minus_neighbors;
+
+        int pivot = -1, max_deg = -1;
         for (int v : P) {
-            if (u == -1 || find(adj[u].begin(), adj[u].end(), v) == adj[u].end()) {
-                P_minus_neighbors.insert(v);
+            if ((int)adj[v].size() > max_deg) {
+                max_deg = adj[v].size();
+                pivot = v;
             }
         }
-       
-      
-        for (int v : P_minus_neighbors) {
-            unordered_set<int> new_R = R;
-            new_R.insert(v);
-           
-           
-            unordered_set<int> new_P;
-            unordered_set<int> new_X;
-           
-            for (int w : P) {
-                if (find(adj[v].begin(), adj[v].end(), w) != adj[v].end()) {
-                    new_P.insert(w);
-                }
+        for (int v : X) {
+            if ((int)adj[v].size() > max_deg) {
+                max_deg = adj[v].size();
+                pivot = v;
             }
-           
-            for (int w : X) {
-                if (find(adj[v].begin(), adj[v].end(), w) != adj[v].end()) {
-                    new_X.insert(w);
-                }
+        }
+
+        set<int> P_copy = P;
+        for (int v : P_copy) {
+            if (pivot != -1 && adj[pivot].count(v)) continue;
+
+            vector<int> R_new = R;
+            R_new.push_back(v);
+
+            set<int> P_new, X_new;
+            for (int u : P) {
+                if (adj[v].count(u)) P_new.insert(u);
             }
-           
-            bronKerboschPivot(new_R, new_P, new_X);
-           
-            // Move v from P to X
+            for (int u : X) {
+                if (adj[v].count(u)) X_new.insert(u);
+            }
+
+            tomita(R_new, P_new, X_new, outputFile, clique_size_distribution, clique_count);
             P.erase(v);
             X.insert(v);
         }
     }
-   
-    void findAllMaximalCliques() {
-       
-        if (degeneracy_ordering.empty()) {
-            computeDegeneracyOrdering();
-        }
-       
-        for (int i = 0; i < n; i++) {
-            int v = degeneracy_ordering[i];
-           
-           
-            unordered_set<int> P;
-            for (int neighbor : adj[v]) {
-                
-                if (find(degeneracy_ordering.begin() + i + 1, degeneracy_ordering.end(), neighbor)
-                    != degeneracy_ordering.end()) {
-                    P.insert(neighbor);
-                }
-            }
-           
-            
-            unordered_set<int> X;
-            for (int neighbor : adj[v]) {
-                
-                if (find(degeneracy_ordering.begin(), degeneracy_ordering.begin() + i, neighbor)
-                    != degeneracy_ordering.begin() + i) {
-                    X.insert(neighbor);
-                }
-            }
-           
-            unordered_set<int> R = {v};
-            bronKerboschPivot(R, P, X);
-        }
-    }
-   
-    void processAndFindCliques(const string& inputFile, const string& outputFile) {
-        auto start_time = high_resolution_clock::now();
-       
-      
-        ifstream fin(inputFile);
-        fin >> n >> m;
-       
-        adj.resize(n);
-       
-       
-        for (int i = 0; i < m; i++) {
-            int u, v;
-            fin >> u >> v;
-            addEdge(u, v);
-        }
-        fin.close();
-       
-       
-        computeDegeneracyOrdering();
-       
-        auto clique_start = high_resolution_clock::now();
-       
-       
-        findAllMaximalCliques();
-       
-        auto clique_end = high_resolution_clock::now();
-        auto end_time = high_resolution_clock::now();
-       
-        
-        auto clique_duration = duration_cast<milliseconds>(clique_end - clique_start);
-        auto total_duration = duration_cast<milliseconds>(end_time - start_time);
-       
-        
-        ofstream fout(outputFile);
-        fout << "Number of maximal cliques: " << total_cliques << endl;
-        fout << "Time taken for clique finding: " << clique_duration.count() << " ms" << endl;
-        fout << "Total execution time: " << total_duration.count() << " ms" << endl;
-        fout << "Clique Size Distribution:" << endl;
-       
-        for (const auto& pair : clique_sizes) {
-            fout << "Size " << pair.first << ": " << pair.second << " cliques" << endl;
-        }
-       
-        fout.close();
+
+    void findMaximalCliques(ofstream& outputFile, map<int, int>& clique_size_distribution, int& clique_count) {
+        vector<int> R;
+        set<int> P, X;
+        for (int i = 0; i < n; i++) P.insert(i);
+        tomita(R, P, X, outputFile, clique_size_distribution, clique_count);
     }
 };
 
-
 int main() {
-    Graph g(0, 0);
-    g.processAndFindCliques("as-skitter.txt", "Els-as-skitter.txt");
+    ifstream inputFile("Email-Enron.txt");
+    if (!inputFile) {
+        cerr << "Error: Could not open file Email-Enron.txt\n";
+        return 1;
+    }
+
+    int n, m, u, v;
+    inputFile >> n >> m;
+
+    if (n <= 0 || m <= 0) {
+        cerr << "Error: Invalid graph size in file.\n";
+        return 1;
+    }
+
+    Graph g(n);
+    map<int, int> vertex_map;
+    int next_index = 0;
+    vector<pair<int, int>> edges;
+
+    while (inputFile >> u >> v) {
+        if (vertex_map.find(u) == vertex_map.end()) vertex_map[u] = next_index++;
+        if (vertex_map.find(v) == vertex_map.end()) vertex_map[v] = next_index++;
+        edges.emplace_back(vertex_map[u], vertex_map[v]);
+    }
+    inputFile.close();
+
+    for (const auto& edge : edges) {
+        g.addEdge(edge.first, edge.second);
+    }
+
+    cout << "Successfully processed " << edges.size() << " edges.\n";
+
+    ofstream outputFile("els-EmailEnron.txt");
+    if (!outputFile) {
+        cerr << "Error: Could not open output file worst-case-Email.txt\n";
+        return 1;
+    }
+
+    auto start = high_resolution_clock::now();
+
+    int clique_count = 0;
+    map<int, int> clique_size_distribution;
+
+    g.findMaximalCliques(outputFile, clique_size_distribution, clique_count);
+
+    auto stop = high_resolution_clock::now();
+    auto duration = duration_cast<milliseconds>(stop - start);
+
+    outputFile << "\nNumber of maximal cliques: " << clique_count << "\n";
+    outputFile << "Time taken: " << duration.count() << " ms\n";
+    outputFile << "\nClique Size Distribution:\n";
+    for (const auto& entry : clique_size_distribution) {
+        outputFile << "Size " << entry.first << ": " << entry.second << " cliques\n";
+    }
+
+    cout << "Number of maximal cliques: " << clique_count << endl;
+    cout << "Clique Size Distribution:\n";
+    for (const auto& entry : clique_size_distribution) {
+        cout << "Size " << entry.first << ": " << entry.second << " cliques\n";
+    }
+
+    cout << "Results saved to worst-case-Email.txt\n";
+    outputFile.close();
     return 0;
 }
