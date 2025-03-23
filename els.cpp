@@ -29,33 +29,32 @@ public:
         adj[v].push_back(u);
     }
    
-    // Compute degeneracy ordering of the graph
     void computeDegeneracyOrdering() {
         vector<int> degree(n, 0);
         vector<vector<int>> bin(n, vector<int>());
         vector<bool> removed(n, false);
         degeneracy_ordering.clear();
        
-        // Calculate initial degrees
+        
         for (int i = 0; i < n; i++) {
             degree[i] = adj[i].size();
             bin[degree[i]].push_back(i);
         }
        
-        // Process vertices in increasing degree order
+        
         for (int i = 0, v = 0; i < n; i++) {
-            // Find the vertex with minimum degree
+            
             int j = 0;
             while (j < n && bin[j].empty()) j++;
            
-            if (j == n) break; // No vertices left
+            if (j == n) break;
            
             v = bin[j].back();
             bin[j].pop_back();
             removed[v] = true;
             degeneracy_ordering.push_back(v);
            
-            // Update degrees of neighbors
+            
             for (int neighbor : adj[v]) {
                 if (!removed[neighbor]) {
                     bin[degree[neighbor]].erase(
@@ -66,15 +65,15 @@ public:
                 }
             }
            
-            // Update degeneracy
+            
             degeneracy = max(degeneracy, j);
         }
        
-        // Reverse the ordering to get the proper degeneracy ordering
+        
         reverse(degeneracy_ordering.begin(), degeneracy_ordering.end());
     }
    
-    // Check if vertex v is connected to all vertices in the set
+  
     bool isConnectedToAll(int v, const unordered_set<int>& vertexSet) {
         for (int u : vertexSet) {
             if (find(adj[v].begin(), adj[v].end(), u) == adj[v].end()) {
@@ -84,7 +83,7 @@ public:
         return true;
     }
    
-    // Find common neighbors between a vertex and a set of vertices
+   
     unordered_set<int> findCommonNeighbors(int v, const unordered_set<int>& vertexSet) {
         unordered_set<int> result;
        
@@ -97,12 +96,12 @@ public:
         return result;
     }
    
-    // Find the vertex in candidates ∪ excluded that has the most neighbors in candidates
+   
     int findPivot(const unordered_set<int>& candidates, const unordered_set<int>& excluded) {
         int max_connections = -1;
         int pivot = -1;
        
-        // Check candidates
+    
         for (int v : candidates) {
             int connections = 0;
             for (int u : candidates) {
@@ -117,7 +116,7 @@ public:
             }
         }
        
-        // Check excluded
+       
         for (int v : excluded) {
             int connections = 0;
             for (int u : candidates) {
@@ -135,10 +134,10 @@ public:
         return pivot;
     }
    
-    // Bron-Kerbosch algorithm with pivoting
+    
     void bronKerboschPivot(unordered_set<int> R, unordered_set<int> P, unordered_set<int> X) {
         if (P.empty() && X.empty()) {
-            // Found a maximal clique
+            
             total_cliques++;
             clique_sizes[R.size()]++;
             if (total_cliques % 10000 == 0) {
@@ -147,10 +146,10 @@ public:
             return;
         }
        
-        // Find pivot
+    
         int u = findPivot(P, X);
        
-        // Find non-neighbors of the pivot
+       
         unordered_set<int> P_minus_neighbors;
         for (int v : P) {
             if (u == -1 || find(adj[u].begin(), adj[u].end(), v) == adj[u].end()) {
@@ -158,12 +157,12 @@ public:
             }
         }
        
-        // Recursively explore
+      
         for (int v : P_minus_neighbors) {
             unordered_set<int> new_R = R;
             new_R.insert(v);
            
-            // Create new P and X sets - neighbors of v
+           
             unordered_set<int> new_P;
             unordered_set<int> new_X;
            
@@ -187,55 +186,50 @@ public:
         }
     }
    
-    // Modified algorithm using degeneracy ordering
     void findAllMaximalCliques() {
-        // Compute degeneracy ordering if not already computed
+       
         if (degeneracy_ordering.empty()) {
             computeDegeneracyOrdering();
         }
        
-        // For each vertex in the degeneracy ordering
         for (int i = 0; i < n; i++) {
             int v = degeneracy_ordering[i];
            
-            // Find later neighbors (P set)
+           
             unordered_set<int> P;
             for (int neighbor : adj[v]) {
-                // Check if neighbor comes later in the degeneracy ordering
+                
                 if (find(degeneracy_ordering.begin() + i + 1, degeneracy_ordering.end(), neighbor)
                     != degeneracy_ordering.end()) {
                     P.insert(neighbor);
                 }
             }
            
-            // Find earlier neighbors (X set)
+            
             unordered_set<int> X;
             for (int neighbor : adj[v]) {
-                // Check if neighbor comes earlier in the degeneracy ordering
+                
                 if (find(degeneracy_ordering.begin(), degeneracy_ordering.begin() + i, neighbor)
                     != degeneracy_ordering.begin() + i) {
                     X.insert(neighbor);
                 }
             }
            
-            // Start Bron-Kerbosch with pivoting from vertex v
             unordered_set<int> R = {v};
             bronKerboschPivot(R, P, X);
         }
     }
    
-    // Process input file and find maximal cliques
     void processAndFindCliques(const string& inputFile, const string& outputFile) {
         auto start_time = high_resolution_clock::now();
        
-        // Read the graph
+      
         ifstream fin(inputFile);
         fin >> n >> m;
        
-        // Resize adjacency list
         adj.resize(n);
        
-        // Read edges
+       
         for (int i = 0; i < m; i++) {
             int u, v;
             fin >> u >> v;
@@ -243,22 +237,22 @@ public:
         }
         fin.close();
        
-        // Compute degeneracy ordering
+       
         computeDegeneracyOrdering();
        
         auto clique_start = high_resolution_clock::now();
        
-        // Find all maximal cliques
+       
         findAllMaximalCliques();
        
         auto clique_end = high_resolution_clock::now();
         auto end_time = high_resolution_clock::now();
        
-        // Calculate time taken
+        
         auto clique_duration = duration_cast<milliseconds>(clique_end - clique_start);
         auto total_duration = duration_cast<milliseconds>(end_time - start_time);
        
-        // Write results to output file
+        
         ofstream fout(outputFile);
         fout << "Number of maximal cliques: " << total_cliques << endl;
         fout << "Time taken for clique finding: " << clique_duration.count() << " ms" << endl;
