@@ -5,7 +5,7 @@
 - Harsh Jawajiwar (2021B5A72358H)
 - Ansh Kalucha(2022A7PS1799H)
 - Sarthak Somani(2021B1A70793H)
-- Ujjwal Mishra(2021B72479H)
+- Ujjwal Mishra(2021B1A72479H)
 
 ---
 Three graph algorithms' C/C++ implementations are included in this repository, along with experimental findings from three datasets.  The `-O3` flag has been used to optimize the algorithms.  The study includes thorough explanations of the algorithms and experimental findings.
