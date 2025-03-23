@@ -108,7 +108,7 @@ The algorithm outputs the maximal cliques to a file, along with a histogram of c
 | Algorithm                | Bron-Kerbosch             | Tomita (Bron-Kerbosch + Pivot) | Tomita (Bron-Kerbosch + Pivot) |
 | Pivot Selection          | No                        | Yes                       | Yes                       |
 | Graph Representation     | Adjacency List            | Adjacency List            | Adjacency List            |
-| Time Complexity          | O(3^(n/3))                | O(3^(n/3))                | O(3^(n/3))                |
+| Time Complexity          | O(m⋅α(G))                 | O(dn3^(d/3))              | O(3^(n/3))                |
 | Space Complexity         | O(n + m)                  | O(n + m)                  | O(n + m)                  |
 | Optimization             | None                      | Pivot Selection           | Pivot Selection           |
 | Output                   | Cliques, Histogram, Time  | Cliques, Histogram, Time  | Cliques, Histogram, Time  |
