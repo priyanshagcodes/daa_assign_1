@@ -13,6 +13,9 @@ Three graph algorithms' C/C++ implementations are included in this repository, a
 ---
 ## Repository Link
 https://github.com/priyanshagcodes/daa_assign_1/tree/main
+---
+## Website Link
+https://daa-assign-grp20.netlify.app/
 
 ## Dataset Preparation
 
@@ -61,7 +64,7 @@ https://github.com/priyanshagcodes/daa_assign_1/tree/main
 1. **Modify Dataset File Names in Source Files:**
 
    - **ELS Algorithm (`els.cpp`):**
-     - Open `els.cpp` and go to **line 273**.
+     - Open `els.cpp` and go to **line 167**.
      - Change the dataset file name to one of: `as-skitter.txt`, `Email-Enron.txt`, or `wiki-Vote.txt` as needed.
      
    - **Tomita Algorithm (`worst-case.cpp`):**
@@ -69,7 +72,7 @@ https://github.com/priyanshagcodes/daa_assign_1/tree/main
      - Change the dataset file name to one of: `as-skitter.txt`, `Email-Enron.txt`, or `wiki-Vote.txt` as needed.
      
    - **Chiba Algorithm (`chiba.cpp`):**
-     - Open `chiba.cpp` and go to **line 146**.
+     - Open `chiba.cpp` and go to **line 181**.
      - Change the dataset file name to one of: `as-skitter.txt`, `Email-Enron.txt`, or `wiki-Vote.txt` as needed.
 
 2. **Compile the Source Files with g++:**
